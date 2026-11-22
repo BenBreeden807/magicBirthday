@@ -64,7 +64,7 @@
 .birthday-card .card-message{white-space:pre-line;text-align:left;font-size:clamp(1rem,2.6vw,1.2rem);line-height:1.65}
 </style>
 </head>
-<body><div class="curtain left"></div><div class="curtain right"></div><main><div class="eyebrow">A very special birthday performance</div><h1>✨ Dada's Impossible Card ✨</h1><div id="app" aria-live="polite"></div><footer>Made with magic and love ❤️ · The Amazing Apprentice</footer></main>
+<body><div class="curtain left"></div><div class="curtain right"></div><main><div class="eyebrow">A very special birthday performance</div><h1>✨ Dada's Impossible Card ✨</h1><div id="app" aria-live="polite"></div><footer>Made with magic and love ❤️ · The Amazing Apprentices</footer></main>
 <script>
 const app=document.getElementById('app');
 const suits=[['♠',false],['♥',true],['♣',false],['♦',true]];
@@ -74,7 +74,7 @@ const videos={welcome:'intro',memorize:'choose',deal:'columns',reveal:'reveal',b
 let deck=[],round=0,stage='welcome',selectedCard=null,birthdayOpened=false,revealFlipped=false;
 function shuffle(a){const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]]}return x}
 function card(c,i=0,extra=''){return `<div class="card ${c.red?'red':''} ${extra}" style="animation-delay:${Math.min(i*18,250)}ms"><span class="corner">${c.rank}<br>${c.suit}</span><span class="big">${c.suit}</span><span class="corner bottom">${c.rank}<br>${c.suit}</span></div>`}
-function video(key,message){const basename=videos[key];const mp4=`videos/${basename}.MP4`;const mov=`videos/${basename}.mov`;return `<div class="video"><div class="avatar">🎩🪄</div><strong>The Amazing Apprentice</strong><span class="sub">${message}</span><span class="sub video-placeholder">Video placeholder: ${basename}.mp4 or ${basename}.mov</span><video controls playsinline preload="metadata" style="display:none" onloadedmetadata="this.style.display='block';this.parentElement.querySelector('.avatar').style.display='none';this.parentElement.querySelector('.video-placeholder').style.display='none'" onerror="this.style.display='none'"><source src="${mp4}" type="video/mp4"><source src="${mov}" type="video/quicktime"></video></div>`}
+function video(key,message){const basename=videos[key];const mp4=`videos/${basename}.MP4`;const mov=`videos/${basename}.mov`;return `<div class="video"><div class="avatar">🎩🪄</div><strong>The Amazing Apprentices</strong><span class="sub">${message}</span><span class="sub video-placeholder">Video placeholder: ${basename}.mp4 or ${basename}.mov</span><video controls playsinline preload="metadata" style="display:none" onloadedmetadata="this.style.display='block';this.parentElement.querySelector('.avatar').style.display='none';this.parentElement.querySelector('.video-placeholder').style.display='none'" onerror="this.style.display='none'"><source src="${mp4}" type="video/mp4"><source src="${mov}" type="video/quicktime"></video></div>`}
 function setStage(next){stage=next;draw();window.scrollTo({top:0,behavior:'smooth'})}
 function start(){deck=shuffle(full).slice(0,21);round=0;selectedCard=null;revealFlipped=false;setStage('memorize')}
 function column(col){return deck.filter((_,i)=>i%3===col)}
