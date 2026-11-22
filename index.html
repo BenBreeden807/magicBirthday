@@ -45,6 +45,22 @@
 .birthday-card{animation:card-unfold .85s ease both}
 @keyframes card-unfold{from{opacity:0;transform:translateY(35px) rotateX(-18deg) scale(.92)}to{opacity:1;transform:translateY(0) rotateX(0) scale(1)}}
 @media(prefers-reduced-motion:reduce){.magic-envelope,.envelope-flap,.envelope-letter,.envelope-seal{transition:none!important}}
+
+/* Secret card starts face down; tap it for a real 3D flip reveal. */
+.flip-card{display:block;position:relative;width:180px;height:258px;margin:26px auto 18px;padding:0;border:0;background:transparent;cursor:pointer;perspective:1000px}
+.flip-card:focus-visible{outline:3px solid #ffe1a4;outline-offset:5px;border-radius:12px}
+.flip-card-inner{position:relative;display:block;width:100%;height:100%;transform-style:preserve-3d;transition:transform .85s cubic-bezier(.2,.7,.2,1)}
+.flip-card.flipped .flip-card-inner{transform:rotateY(180deg)}
+.flip-card-back,.flip-card-face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:12px;overflow:hidden;box-shadow:0 12px 28px #0008}
+.flip-card-back{border:9px solid #fcf2df;background:repeating-linear-gradient(45deg,#8f2948 0px,#8f2948 9px,#f3d18e 9px,#f3d18e 12px,#233252 12px,#233252 22px);color:#ffedbd}
+.flip-card-back:before{content:"";position:absolute;inset:9px;border:2px solid #f5d895;border-radius:6px;background:#1f2c51}
+.flip-card-back:after{content:"✦  ✧  ✦";position:relative;font-family:Georgia,serif;font-size:29px;text-shadow:0 2px 8px #0009}
+.flip-card-face{transform:rotateY(180deg);background:#fffdf5}
+.flip-card-face .card{width:100%;height:100%;aspect-ratio:auto;border:6px solid #e1c7a0;border-radius:12px}
+.flip-card-face .card .big{font-size:84px}
+.flip-card-face .card .corner{font-size:25px}
+@media(prefers-reduced-motion:reduce){.flip-card-inner{transition:none!important}}
+[hidden]{display:none!important}
 </style>
 </head>
 <body><div class="curtain left"></div><div class="curtain right"></div><main><div class="eyebrow">A very special birthday performance</div><h1>✨ Dada's Impossible Card ✨</h1><div id="app" aria-live="polite"></div><footer>Made with magic and love ❤️ · The Amazing Apprentice</footer></main>
@@ -54,14 +70,15 @@ const suits=[['♠',false],['♥',true],['♣',false],['♦',true]];
 const ranks=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 const full=ranks.flatMap(rank=>suits.map(([suit,red])=>({rank,suit,red})));
 const videos={welcome:'intro',memorize:'choose',deal:'columns',reveal:'reveal',birthday:'birthday'};
-let deck=[],round=0,stage='welcome',selectedCard=null,birthdayOpened=false;
+let deck=[],round=0,stage='welcome',selectedCard=null,birthdayOpened=false,revealFlipped=false;
 function shuffle(a){const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]]}return x}
 function card(c,i=0,extra=''){return `<div class="card ${c.red?'red':''} ${extra}" style="animation-delay:${Math.min(i*18,250)}ms"><span class="corner">${c.rank}<br>${c.suit}</span><span class="big">${c.suit}</span><span class="corner bottom">${c.rank}<br>${c.suit}</span></div>`}
 function video(key,message){const basename=videos[key];const mp4=`videos/${basename}.MP4`;const mov=`videos/${basename}.mov`;return `<div class="video"><div class="avatar">🎩🪄</div><strong>The Amazing Apprentice</strong><span class="sub">${message}</span><span class="sub video-placeholder">Video placeholder: ${basename}.mp4 or ${basename}.mov</span><video controls playsinline preload="metadata" style="display:none" onloadedmetadata="this.style.display='block';this.parentElement.querySelector('.avatar').style.display='none';this.parentElement.querySelector('.video-placeholder').style.display='none'" onerror="this.style.display='none'"><source src="${mp4}" type="video/mp4"><source src="${mov}" type="video/quicktime"></video></div>`}
 function setStage(next){stage=next;draw();window.scrollTo({top:0,behavior:'smooth'})}
-function start(){deck=shuffle(full).slice(0,21);round=0;selectedCard=null;setStage('memorize')}
+function start(){deck=shuffle(full).slice(0,21);round=0;selectedCard=null;revealFlipped=false;setStage('memorize')}
 function column(col){return deck.filter((_,i)=>i%3===col)}
-function choose(col){const cols=[column(0),column(1),column(2)];const other=[0,1,2].filter(i=>i!==col);deck=[...cols[other[0]],...cols[col],...cols[other[1]]];round++;if(round===3){selectedCard=deck[10];setStage('reveal')}else setStage('between')}
+function choose(col){const cols=[column(0),column(1),column(2)];const other=[0,1,2].filter(i=>i!==col);deck=[...cols[other[0]],...cols[col],...cols[other[1]]];round++;if(round===3){selectedCard=deck[10];revealFlipped=false;setStage('reveal')}else setStage('between')}
+function flipRevealCard(){if(revealFlipped)return;revealFlipped=true;const button=document.querySelector('.flip-card');if(button){button.classList.add('flipped');button.setAttribute('aria-label','Revealed card');button.disabled=true;}const message=document.getElementById('reveal-instructions');if(message)message.textContent='Is that your card, Dada? I knew I could find it! But I’ve got one more surprise for you…';const next=document.getElementById('reveal-next');if(next)next.hidden=false;}
 function openBirthdayCard(){const env=document.querySelector('.magic-envelope');if(!env||env.disabled)return;env.disabled=true;env.classList.add('opening');setTimeout(()=>{birthdayOpened=true;draw()},window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:850)}
 function finish(){birthdayOpened=false;setStage('birthday');for(let i=0;i<42;i++){const s=document.createElement('span');s.className='confetti';s.textContent=['✨','⭐','🎉','❤️'][i%4];s.style.left=Math.random()*100+'vw';s.style.animationDelay=Math.random()*1.4+'s';document.body.appendChild(s);setTimeout(()=>s.remove(),5100)}}
 function draw(){
@@ -70,7 +87,7 @@ if(stage==='welcome')html=`<div class="panel">${video('welcome','Your personal m
 if(stage==='memorize')html=`<div class="panel">${video('memorize','Pick any card — but keep it a secret!')}<h2>Choose ANY card in your mind</h2><p class="dialogue">Look carefully at all 21 cards. Remember just one. Don't tap it, don't say it, and don't tell anyone!</p><div class="deck">${deck.map(card).join('')}</div><button class="btn" onclick="setStage('deal')">I've remembered my card →</button></div>`;
 if(stage==='deal')html=`<div class="panel">${video('deal','Tell me only which column contains your card!')}<div class="progress">${[0,1,2].map(i=>`<span class="dot ${i<=round?'on':''}"></span>`).join('')}</div><h2>Round ${round+1} of 3</h2><p class="dialogue">“Dada, which column is your secret card in? Tap that column. Don't tell me which card!”</p><div class="columns">${[0,1,2].map(c=>`<button class="column" onclick="choose(${c})" aria-label="Choose column ${c+1}"><span>Column ${c+1}</span><div class="stack">${column(c).map(card).join('')}</div><span>It's in this column</span></button>`).join('')}</div><p class="sub">The cards will be gathered and dealt again after each choice.</p></div>`;
 if(stage==='between')html=`<div class="panel">${video('deal','The cards have been magically mixed!')}<h2>✨ Abracadabra! ✨</h2><p class="dialogue">“Ooooh, interesting! I think I'm getting closer. Keep thinking about your card, Dada!”</p><button class="btn" onclick="setStage('deal')">Deal the cards again →</button></div>`;
-if(stage==='reveal')html=`<div class="panel">${video('reveal','I know exactly which card you chose!')}<h2>Dada… is THIS your card?</h2>${card(selectedCard,0,'reveal-card')}<p class="dialogue">“I knew I could find it! But I've got one more surprise for you…”</p><button class="btn" onclick="finish()">One final surprise 🎁</button></div>`;
+if(stage==='reveal')html=`<div class="panel">${video('reveal','I know exactly which card you chose!')}<h2>Dada, I think I've found your card…</h2><p id="reveal-instructions" class="dialogue">${revealFlipped?"Is that your card, Dada? I knew I could find it! But I’ve got one more surprise for you…":"Tap the face-down card to turn it over and see the big reveal!"}</p><button type="button" class="flip-card ${revealFlipped?'flipped':''}" aria-label="${revealFlipped?'Revealed card':'Tap to turn over the card and reveal your choice'}" onclick="flipRevealCard()" ${revealFlipped?'disabled':''}><span class="flip-card-inner"><span class="flip-card-back" aria-hidden="true"></span><span class="flip-card-face" aria-hidden="true">${card(selectedCard)}</span></span></button><button id="reveal-next" class="btn" onclick="finish()" ${revealFlipped?'':'hidden'}>One final surprise 🎁</button></div>`;
 if(stage==='birthday')html=`<div class="panel">${video('birthday','A special birthday greeting for Dada')}<div class="eyebrow" style="margin-top:24px">A little more birthday magic</div>${birthdayOpened?`<div class="birthday-card" role="article" aria-label="Digital birthday card for Dada"><div class="heart">🎩✨❤️</div><h2>Happy Birthday, Dada!</h2><p class="card-message">[Your special birthday message for Dada will go here. We'll replace this with your own words later.]</p><p class="card-signoff">With lots of love,<br>Your little magician ❤️</p></div><p class="sub">The birthday message is a placeholder and can be personalised later.</p>`:`<div class="envelope-scene"><h2>A birthday message just for you, Dada!</h2><p class="dialogue">Tap the envelope to open your card.</p><button type="button" class="magic-envelope" aria-label="Open your digital birthday card" onclick="openBirthdayCard()"><span class="envelope-back"></span><span class="envelope-letter">Happy Birthday!</span><span class="envelope-front"></span><span class="envelope-flap"></span><span class="envelope-seal">♥</span></button><p class="sub">✉️ Tap to open ✉️</p></div>`}<button class="btn secondary" onclick="start()">Watch the magic again ↻</button></div>`;
 app.innerHTML=html;
 }
